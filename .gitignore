@@ -1,0 +1,16 @@
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+terraform.tfvars
+crash.log
+*.log
+
+# SSH Keys & Sensitive Data
+*.key
+*.pub
+customdata.tpl
+*.tpl
+
+# System files
+.DS_Store
