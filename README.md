@@ -23,7 +23,6 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 ├── terraform-output.png # Screenshot of Azure portal output
 ├── README.md # Project documentation
 
-
 ---
 
 ## ⚙️ Getting Started
@@ -52,7 +51,7 @@ After successful provisioning with Terraform, the following configuration was pe
 ✅ Installed Docker Engine on Ubuntu 20.04 LTS
 🛠️ Verified installation using: docker --version
 📦 Purpose: Prepares the VM for container-based workloads (optional future expansion)
-📜 Installed via cloud-init script defined in customdata.tpl
+📜 Installed via cloud-init script defined in [`customdata.tpl`](./customdata.tpl)
 📂 All configurations handled through ansible/playbook.yml
 
 ### CI/CD with GitHub Actions
@@ -82,4 +81,8 @@ Terraform output after applying the configuration on Azure:
  📦 []Use Terraform modules to organize infrastructure
 
  👤 Author
-GitHub Profile: Nm-mutua
+GitHub Profile: [**Nm-mutua**](https:github.com/Nm-mutua).
+
+## Credits
+This project is inspired by the [FreeCodeCamp Terraform on Azure tutorial](https://www.youtube.com/watch?v=V53AHWun17s&list=WL&index=4)
+
