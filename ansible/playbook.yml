@@ -1,0 +1,54 @@
+---
+- name: Configure Apache Web Server and Harden VM
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+        update_cache: true
+
+    - name: Start and enable Apache
+      systemd:
+        name: apache2
+        state: started
+        enabled: true
+
+    - name: Allow Apache on UFW
+      ufw:
+        rule: allow
+        name: "Apache Full"
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - name: Install Fail2Ban
+      apt:
+        name: fail2ban
+        state: present
+        update_cache: true
+
+    - name: Configure Fail2Ban with custom settings
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [sshd]
+          enabled = true
+          port = ssh
+          filter = sshd
+          logpath = /var/log/auth.log
+          maxretry = 3
+          bantime = 600
+      notify: Restart Fail2Ban
+
+  handlers:
+    - name: Restart Fail2Ban
+      service:
+        name: fail2ban
+        state: restarted
+
