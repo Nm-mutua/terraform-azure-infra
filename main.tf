@@ -52,9 +52,9 @@ resource "azurerm_network_security_rule" "mtc-dev-rule" {
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
-  protocol                    = "*"
+  protocol                    = "Tcp"
   source_port_range           = "*"
-  destination_port_range      = "*"
+  destination_port_range      = "22"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.mtc-rg.name
@@ -123,7 +123,7 @@ resource "azurerm_linux_virtual_machine" "mtc-vm" {
   }
 
   provisioner "local-exec" {
-    command = templatefile("{var.host_os}-ssh-script.tpl", {
+    command = templatefile("windows-ssh-script.tpl", {
       hostname     = self.public_ip_address,
       user         = "adminuser",
       identityfile = "~/.ssh/mtcazurekey"
@@ -136,10 +136,10 @@ resource "azurerm_linux_virtual_machine" "mtc-vm" {
 }
 
 data "azurerm_public_ip" "mtc-ip-data" {
-    name = azurerm_public_ip.mtc-ip.name
-    resource_group_name = azurerm_resource_group.mtc-rg.name
+  name                = azurerm_public_ip.mtc-ip.name
+  resource_group_name = azurerm_resource_group.mtc-rg.name
 }
 
 output "public_ip_address" {
-    value = "${azurerm_linux_virtual_machine.mtc-vm.name}: ${data.azurerm_public_ip.mtc-ip-data.ip_address}"
+  value = "${azurerm_linux_virtual_machine.mtc-vm.name}: ${data.azurerm_public_ip.mtc-ip-data.ip_address}"
 }
