@@ -89,7 +89,7 @@ This project is designed for future integration with GitHub Actions. Planned aut
   - 🔐 Hardened with UFW (Allow 22, 80), Fail2Ban
   - 📂 All configurations handled through ansible/playbook.yml
 
-## 📸 Screenshot
+## 📸 Screenshots
 Terraform output after applying the configuration on Azure:
 ![Terraform Output showing Azure resources](./terraform-output.png)
 
