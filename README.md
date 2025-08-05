@@ -91,6 +91,7 @@ This project is designed for future integration with GitHub Actions. Planned aut
 
 ## 📸 Screenshot
 Terraform output after applying the configuration on Azure:
+![Terraform Output showing Azure resources](./terraform-output.png)
 
 ### Planned Enhancements (Roadmap)
 
