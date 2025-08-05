@@ -95,16 +95,16 @@ This project is designed for future integration with GitHub Actions. Planned aut
 ![Terraform Output showing Azure resources](screenshots/terraform-output.png)
 
 ### Ansible Playbook Run Output
-![Ansible Playbook Run](screenshots/ansible-playbook-run.png)
+![Ansible Playbook Run](screenshots/Ansible_Playbook_Run.png)
 
 ### Apache2 Service Running
-![Apache2 Service Status](screenshots/apache2-service-status.png)
+![Apache2 Service Status](screenshots/Apache2_Service_Status.png)
 
 ### Apache2 Ubuntu Default Page
-![Apache2 Ubuntu Default Page](screenshots/apache2-ubuntu-default-page.png)
+![Apache2 Ubuntu Default Page](screenshots/Apache2_Ubuntu_Default_Page.png)
 
 ### Fail2Ban SSH Jail Status
-![Fail2Ban SSH Jail Status](screenshots/fail2ban-ssh-jail-status.png)
+![Fail2Ban SSH Jail Status](screenshots/Fail2Ban_SSH_Jail_Status.png)
 
 
 ### Planned Enhancements (Roadmap)
