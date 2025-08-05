@@ -92,7 +92,7 @@ This project is designed for future integration with GitHub Actions. Planned aut
 ## 📸 Screenshots
 
 ### Terraform output after applying the configuration on Azure:
-![Terraform Output showing Azure resources](./terraform-output.png)
+![Terraform Output showing Azure resources](screenshots/terraform-output.png)
 
 ### Ansible Playbook Run Output
 ![Ansible Playbook Run](screenshots/ansible-playbook-run.png)
