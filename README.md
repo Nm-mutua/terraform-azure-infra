@@ -90,8 +90,24 @@ This project is designed for future integration with GitHub Actions. Planned aut
   - 📂 All configurations handled through ansible/playbook.yml
 
 ## 📸 Screenshots
-Terraform output after applying the configuration on Azure:
+
+### Terraform output after applying the configuration on Azure:
 ![Terraform Output showing Azure resources](./terraform-output.png)
+
+## 📸 Screenshots
+
+### ✅ 1. Ansible Playbook Run Output
+![Ansible Playbook Run](screenshots/ansible-playbook-run.png)
+
+### ✅ 2. Apache2 Service Running
+![Apache2 Service Status](screenshots/apache2-service-status.png)
+
+### ✅ 3. Apache2 Ubuntu Default Page
+![Apache2 Ubuntu Default Page](screenshots/apache2-ubuntu-default-page.png)
+
+### ✅ 4. Fail2Ban SSH Jail Status
+![Fail2Ban SSH Jail Status](screenshots/fail2ban-ssh-jail-status.png)
+
 
 ### Planned Enhancements (Roadmap)
 
