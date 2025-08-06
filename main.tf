@@ -2,13 +2,14 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "=3.0.0"
+      version = "= 3.75.0"
     }
   }
 }
 
 provider "azurerm" {
   features {}
+  skip_provider_registration = true
 }
 
 resource "azurerm_resource_group" "mtc-rg" {
@@ -55,7 +56,7 @@ resource "azurerm_network_security_rule" "mtc-dev-rule" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "22"
-  source_address_prefix       = "*"
+  source_address_prefix       = "172.173.147.218"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.mtc-rg.name
   network_security_group_name = azurerm_network_security_group.mtc-sg.name
@@ -142,4 +143,47 @@ data "azurerm_public_ip" "mtc-ip-data" {
 
 output "public_ip_address" {
   value = "${azurerm_linux_virtual_machine.mtc-vm.name}: ${data.azurerm_public_ip.mtc-ip-data.ip_address}"
+}
+
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_key_vault" "mtc_kv" {
+  name                        = "mtc-keyvault-${random_id.suffix.hex}"
+  location                    = azurerm_resource_group.mtc-rg.location
+  resource_group_name         = azurerm_resource_group.mtc-rg.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  soft_delete_retention_days  = 7
+  purge_protection_enabled    = false
+  sku_name                    = "standard"
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    secret_permissions = [
+      "Get",
+      "List",
+      "Set",
+      "Delete"
+    ]
+  }
+
+  tags = {
+    environment = "dev"
+  }
+}
+
+resource "azurerm_key_vault_secret" "vm_admin_password" {
+  name         = "vm-admin-password"
+  value        = "P@ssword123!"
+  key_vault_id = azurerm_key_vault.mtc_kv.id
+}
+
+output "client_id" {
+  value = data.azurerm_client_config.current.client_id
 }

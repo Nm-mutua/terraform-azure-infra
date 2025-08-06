@@ -8,7 +8,7 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 - Public IP and Network Interface  
 - Ubuntu Linux Virtual Machine  
 - Cloud-init for VM configuration via `customdata.tpl`  
-- Docker Engine pre-installed for containerized workloads  
+- Automated server configuration and hardening with Ansible (see [Apache Setup & Hardening](#apache-setup--hardening))  
 
 ---
 
@@ -16,14 +16,32 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 
 ```
 .
-├── main.tf # Main Terraform configuration
-├── variables.tf # Declares input variables
-├── osx.tfvars # Variable values (used with -var-file)
-├── .gitignore # Files/directories to ignore in Git
-├── .terraform.lock.hcl # Dependency lock file for Terraform
-├── terraform-output.png # Screenshot of Azure portal output
-├── README.md # Project documentation
+├── main.tf                       # Main Terraform configuration
+├── variables.tf                  # Declares input variables
+├── osx.tfvars                    # Variable values (used with -var-file)
+├── .gitignore                    # Files/directories to ignore in Git
+├── .terraform.lock.hcl           # Dependency lock file for Terraform
+├── README.md                     # Project documentation
 
+├── screenshots/                  # Screenshots and visual references
+│   └── terraform-output.png      # Screenshot of Azure portal output
+
+├── ansible/                      # Ansible configuration directory
+│   ├── playbook.yml              # Ansible playbook to configure Apache & harden the VM
+│   ├── inventory.ini             # Inventory file listing the target VM
+│   ├── roles/                    # Ansible roles (modular configuration)
+│   │   ├── apache/               # Role: Install & configure Apache
+│   │   ├── security/             # Role: Harden VM with UFW, Fail2Ban
+│   │   └── docker/               # (Optional) Role: Install & configure Docker
+│   └── group_vars/
+│       └── all.yml               # Global variables for Ansible
+
+├── scripts/                      # Shell scripts (optional)
+│   └── install_ansible.sh        # Script to install Ansible on control node
+
+└── templates/
+    └── customdata.tpl            # Cloud-init script for VM provisioning
+```
 
 ## ⚙️ Getting Started
 
@@ -33,6 +51,9 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 - Azure CLI
 - SSH (Cloud-init)
 - Ubuntu 20.04 LTS
+- Ansible v2.10+
+- Python 3
+- GitHub Actions
 
 ### ▶️ Usage
 
@@ -68,8 +89,23 @@ This project is designed for future integration with GitHub Actions. Planned aut
   - 🔐 Hardened with UFW (Allow 22, 80), Fail2Ban
   - 📂 All configurations handled through ansible/playbook.yml
 
-## 📸 Screenshot
-Terraform output after applying the configuration on Azure:
+## 📸 Screenshots
+
+### Terraform output after applying the configuration on Azure:
+![Terraform Output showing Azure resources](./terraform-output.png)
+
+### Ansible Playbook Run Output
+![Ansible Playbook Run](screenshots/ansible-playbook-run.png)
+
+### Apache2 Service Running
+![Apache2 Service Status](screenshots/apache2-service-status.png)
+
+### Apache2 Ubuntu Default Page
+![Apache2 Ubuntu Default Page](screenshots/apache2-ubuntu-default-page.png)
+
+### Fail2Ban SSH Jail Status
+![Fail2Ban SSH Jail Status](screenshots/fail2ban-ssh-jail-status.png)
+
 
 ### Planned Enhancements (Roadmap)
 

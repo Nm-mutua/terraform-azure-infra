@@ -1,16 +1,33 @@
-# Terraform
+# Terraform state and backups
 *.tfstate
 *.tfstate.backup
 .terraform/
+.terraform.lock.hcl
+
+# Sensitive data
 terraform.tfvars
+*.pem
+*.key
+*.pub
+*.crt
+*.env
+*.tpl
+
+# Ansible vars (optional if you ever create secrets in Ansible)
+ansible/group_vars/
+
+# Crash/debug logs
 crash.log
 *.log
 
-# SSH Keys & Sensitive Data
-*.key
-*.pub
-customdata.tpl
-*.tpl
+# VSCode & IDE settings
+.vscode/
+.idea/
 
 # System files
 .DS_Store
+Thumbs.db
+
+screenshots/
+
+osx.tfvars
