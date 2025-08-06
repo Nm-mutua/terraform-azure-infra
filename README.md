@@ -16,31 +16,41 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 
 ```
 .
-├── main.tf                       # Main Terraform configuration
-├── variables.tf                  # Declares input variables
-├── osx.tfvars                    # Variable values (used with -var-file)
-├── .gitignore                    # Files/directories to ignore in Git
-├── .terraform.lock.hcl           # Dependency lock file for Terraform
-├── README.md                     # Project documentation
+├── main.tf # Main Terraform configuration (VM, Key Vault, Secret)
+├── variables.tf # Declares input variables
+├── osx.tfvars # Variable values (used with -var-file)
+├── outputs.tf # Terraform output values (e.g. public IP, client_id)
+├── .gitignore # Files/directories to ignore in Git
+├── .terraform.lock.hcl # Dependency lock file for Terraform
+├── README.md # Project documentation
 
-├── screenshots/                  # Screenshots and visual references
-│   └── terraform-output.png      # Screenshot of Azure portal output
+├── screenshots/ # Screenshots and visual references
+│ ├── terraform-output.png # Terraform output showing Azure resources
+│ ├── Ansible_Playbook_Run.png # Ansible playbook execution output
+│ ├── Apache2_Service_Status.png # Apache2 systemctl service status
+│ ├── Apache2_Ubuntu_Default_Page.png # Default Apache2 welcome page
+│ ├── Fail2Ban_SSH_Jail_Status.png # Fail2Ban jail status confirming protection
+│ ├── Terraform_Plan.png # Terraform plan before applying
+│ ├── Terraform_Apply.png # Terraform apply showing successful resource creation
+│ ├── Keyvault_Secret_Success.png # Confirmation that secret was created
+│ ├── Keyvault_Secret_Detail.png # Secret version, name, and status
+│ └── Keyvault_Access_Policy.png # Access policy with secret permissions
 
-├── ansible/                      # Ansible configuration directory
-│   ├── playbook.yml              # Ansible playbook to configure Apache & harden the VM
-│   ├── inventory.ini             # Inventory file listing the target VM
-│   ├── roles/                    # Ansible roles (modular configuration)
-│   │   ├── apache/               # Role: Install & configure Apache
-│   │   ├── security/             # Role: Harden VM with UFW, Fail2Ban
-│   │   └── docker/               # (Optional) Role: Install & configure Docker
-│   └── group_vars/
-│       └── all.yml               # Global variables for Ansible
+├── ansible/ # Ansible configuration directory
+│ ├── playbook.yml # Ansible playbook to configure Apache & harden the VM
+│ ├── inventory.ini # Inventory file listing the target VM
+│ ├── roles/ # Ansible roles (modular configuration)
+│ │ ├── apache/ # Role: Install & configure Apache
+│ │ ├── security/ # Role: Harden VM with UFW, Fail2Ban
+│ │ └── docker/ # (Optional) Role: Install & configure Docker
+│ └── group_vars/
+│ └── all.yml # Global variables for Ansible
 
-├── scripts/                      # Shell scripts (optional)
-│   └── install_ansible.sh        # Script to install Ansible on control node
+├── scripts/ # Shell scripts (optional)
+│ └── install_ansible.sh # Script to install Ansible on control node
 
 └── templates/
-    └── customdata.tpl            # Cloud-init script for VM provisioning
+└── customdata.tpl # Cloud-init script for VM provisioning
 ```
 
 ## ⚙️ Getting Started
@@ -54,6 +64,8 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 - Ansible v2.10+
 - Python 3
 - GitHub Actions
+- Azure Key Vault
+- GitHub for version control
 
 ### ▶️ Usage
 
@@ -89,29 +101,72 @@ This project is designed for future integration with GitHub Actions. Planned aut
   - 🔐 Hardened with UFW (Allow 22, 80), Fail2Ban
   - 📂 All configurations handled through ansible/playbook.yml
 
+### 🔐 Secure Credentials with Azure Key Vault using Terraform
+This section demonstrates how I used Terraform to deploy an Azure Key Vault instance and securely store a secret.
+
+## 🚀 Steps
+
+1. Define Key Vault in Terraform
+   - I used the azurerm_key_vault resource to deploy Key Vault and attach proper access policies for my Service Principal.
+
+2. Add Access Policy
+   - The policy grants permission to get, list, and set secrets (see screenshot).
+
+
+3. Inject Secret via Terraform
+   - I created a sample secret (e.g., a database password) using the azurerm_key_vault_secret resource.
+
+4. Verify Key Vault Deployment
+   - After running terraform apply, the Key Vault and its secret were successfully provisioned.
+       - ✅ Plan phase:
+       - ✅ Apply phase:
+
+5. Secret Confirmed in Azure Portal
+   - The secret was successfully created and stored securely.
+       - ✅ Success toast:
+       - 🔍 Secret details:
+
+## ✅ Outcome
+    - This demo shows how sensitive data (such as API keys or passwords) can be securely managed using Infrastructure as Code and Azure-native services, aligning with DevOps and security best practices.
+
 ## 📸 Screenshots
 
 ### Terraform output after applying the configuration on Azure:
-![Terraform Output showing Azure resources](./terraform-output.png)
+![Terraform Output showing Azure resources](screenshots/terraform-output.png)
 
 ### Ansible Playbook Run Output
-![Ansible Playbook Run](screenshots/ansible-playbook-run.png)
+![Ansible Playbook Run](screenshots/Ansible_Playbook_Run.png)
 
 ### Apache2 Service Running
-![Apache2 Service Status](screenshots/apache2-service-status.png)
+![Apache2 Service Status](screenshots/Apache2_Service_Status.png)
 
 ### Apache2 Ubuntu Default Page
-![Apache2 Ubuntu Default Page](screenshots/apache2-ubuntu-default-page.png)
+![Apache2 Ubuntu Default Page](screenshots/Apache2_Ubuntu_Default_Page.png)
 
 ### Fail2Ban SSH Jail Status
-![Fail2Ban SSH Jail Status](screenshots/fail2ban-ssh-jail-status.png)
+![Fail2Ban SSH Jail Status](screenshots/Fail2Ban_SSH_Jail_Status.png)
+
+### Terraform Plan before Applying
+![Terraform Plan Output](screenshots/Terraform_Plan.png)
+
+### Terraform Output after Applying the Configuration on Azure
+![Terraform Apply Output](screenshots/Terraform_Apply.png)
+
+### Azure Key Vault Secret Created Successfully
+![Azure Key Vault Secret Created](screenshots/Keyvault_Secret_Success.png)
+
+### Azure Key Vault Secret Details Page
+![Azure Key Vault Secret Details](screenshots/Keyvault_Secret_Detail.png)
+
+### Azure Key Vault Access Policy Assigned
+![Azure Key Vault Access Policy](screenshots/Keyvault_Access_Policy.png)
 
 
 ### Planned Enhancements (Roadmap)
 
 - 🔧 [x] Integrate Ansible to configure Apache and harden the VM
 - 🛡️ [x]Harden VM with UFW, Fail2Ban, and best security practices
-- 🔐 [ ]Secure credentials using Azure Key Vault
+- 🔐 [x]Secure credentials using Azure Key Vault
 - 📊 [ ]Enable Azure Monitor and Log Analytics
 - ⚙️ [ ]Automate with GitHub Actions CI/CD
 - 📦 [ ]Use Terraform modules to organize infrastructure
