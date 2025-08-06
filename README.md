@@ -54,6 +54,8 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 - Ansible v2.10+
 - Python 3
 - GitHub Actions
+- Azure Key Vault
+- GitHub for version control
 
 ### ▶️ Usage
 
@@ -89,6 +91,34 @@ This project is designed for future integration with GitHub Actions. Planned aut
   - 🔐 Hardened with UFW (Allow 22, 80), Fail2Ban
   - 📂 All configurations handled through ansible/playbook.yml
 
+### 🔐 Secure Credentials with Azure Key Vault using Terraform
+This section demonstrates how I used Terraform to deploy an Azure Key Vault instance and securely store a secret.
+
+## 🚀 Steps
+
+1. Define Key Vault in Terraform
+   - I used the azurerm_key_vault resource to deploy Key Vault and attach proper access policies for my Service Principal.
+
+2. Add Access Policy
+   - The policy grants permission to get, list, and set secrets (see screenshot).
+
+
+3. Inject Secret via Terraform
+   - I created a sample secret (e.g., a database password) using the azurerm_key_vault_secret resource.
+
+4. Verify Key Vault Deployment
+   - After running terraform apply, the Key Vault and its secret were successfully provisioned.
+       - ✅ Plan phase:
+       - ✅ Apply phase:
+
+5. Secret Confirmed in Azure Portal
+   - The secret was successfully created and stored securely.
+       - ✅ Success toast:
+       - 🔍 Secret details:
+
+## ✅ Outcome
+    - This demo shows how sensitive data (such as API keys or passwords) can be securely managed using Infrastructure as Code and Azure-native services, aligning with DevOps and security best practices.
+
 ## 📸 Screenshots
 
 ### Terraform output after applying the configuration on Azure:
@@ -105,6 +135,21 @@ This project is designed for future integration with GitHub Actions. Planned aut
 
 ### Fail2Ban SSH Jail Status
 ![Fail2Ban SSH Jail Status](screenshots/Fail2Ban_SSH_Jail_Status.png)
+
+### Terraform Plan before Applying
+![Terraform Plan Output](screenshots/Terraform_Plan.png)
+
+### Terraform Output after Applying the Configuration on Azure
+![Terraform Apply Output](screenshots/Terraform_Apply.png)
+
+### Azure Key Vault Secret Created Successfully
+![Azure Key Vault Secret Created](screenshots/Keyvault_Secret_Success.png)
+
+### Azure Key Vault Secret Details Page
+![Azure Key Vault Secret Details](screenshots/Keyvault_Secret_Detail.png)
+
+### Azure Key Vault Access Policy Assigned
+![Azure Key Vault Access Policy](screenshots/Keyvault_Access_Policy.png)
 
 
 ### Planned Enhancements (Roadmap)
