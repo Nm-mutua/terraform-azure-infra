@@ -1,0 +1,15 @@
+# .github/workflows/terraform.yml
+name: Terraform checks
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: 1.6.6 }
+      - run: terraform fmt -check
+      - run: terraform init -backend=false
+      - run: terraform validate
+      - uses: terraform-linters/setup-tflint@v4
+      - run: tflint --init && tflint
