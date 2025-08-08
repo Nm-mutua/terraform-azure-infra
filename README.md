@@ -168,15 +168,20 @@ The setup was fully automated using **Terraform**.
 
 **Syslog Query:**
 ```kusto
+
 Syslog
 | where TimeGenerated > ago(30m)
 | sort by TimeGenerated desc
 
 **Performance Counters Query:**
-```Perf
+```kusto
+
+Perf
 | where TimeGenerated > ago(30m)
 | summarize avg(CounterValue) by Computer, ObjectName, CounterName
 | order by Computer, ObjectName, CounterName
+
+```
 
 ✅ Outcome:
 This configuration enables end-to-end monitoring for the VM, providing both platform metrics and guest OS logs, all automated through Terraform and integrated into Azure Monitor.
@@ -213,37 +218,37 @@ This configuration enables end-to-end monitoring for the VM, providing both plat
 ### Azure Key Vault Access Policy Assigned
 ![Azure Key Vault Access Policy](screenshots/Keyvault_Access_Policy.png)
 
-### Azure Log Analytics Workspace Created**
+### Azure Log Analytics Workspace Created
 ![Azure Log Analytics Workspace Installed](screenshots/Azure_Log_Analytics_Workspace_Installed.png)
 
-### Azure Monitor Agent Installed on Linux VM**
+### Azure Monitor Agent Installed on Linux VM
 ![Azure Monitor Linux Agent Installed](screenshots/Azure_Monitor_Linux_Agent_Installed.png)
 
-### Terraform Output — Workspace Created**
+### Terraform Output — Workspace Created
 ![Terraform Output - Workspace](screenshots/Azurerm_Log_Analytics_Workspace_Apply_Output.png)
 
-### Terraform Output — Data Collection Endpoint Created**
+### Terraform Output — Data Collection Endpoint Created
 ![Terraform Output - DCE](screenshots/Azurerm_Monitor_Data_Collection_Endpoint_Apply_Output.png)
 
-### Terraform Output — Data Collection Rule Created**
+### Terraform Output — Data Collection Rule Created
 ![Terraform Output - DCR](screenshots/Azurerm_Monitor_Data_Collection_Rule_Apply_Output.png)
 
-### Terraform Output — DCR Association Created**
+### Terraform Output — DCR Association Created
 ![Terraform Output - Association](screenshots/Azurerm_Monitor_Data_Collection_Rule_Association_Apply_Output.png)
 
-### Data Collection Endpoint Configured**
+### Data Collection Endpoint Configured
 ![DCE Configured](screenshots/Data_Collection_Endpoint_Configured.png)
 
-### Data Collection Rule Configured**
+### Data Collection Rule Configured
 ![DCR Configured](screenshots/Data_Collection_Rule_Configured.png)
 
 ### VM Associated with DCR**
 ![VM Associated](screenshots/Mtc_VM_Associated_With_DCR.png)
 
-### Syslog Logs Collected**
+### Syslog Logs Collected
 ![Syslog Logs](screenshots/Syslog_Logs_Populated.png)
 
-### Performance Logs Collected**
+### Performance Logs Collected
 ![Performance Logs](screenshots/Perf_Logs_Populated.png)
 
 ### Syslog Performance Counters Configured**
