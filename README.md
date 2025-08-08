@@ -183,21 +183,29 @@ The setup was fully automated using **Terraform**.
 
 ### 📊 Verification Queries
 
-**Syslog Query:**
-```kusto
-
+## 📄 Syslog Query (KQL):
+```
 Syslog
 | where TimeGenerated > ago(30m)
 | sort by TimeGenerated desc
+```
+📷 Screenshot:
 
-**Performance Counters Query:**
-```kusto
+### Syslog Logs Collected
+![Syslog Logs](screenshots/Syslog_Logs_Populated.png)
+
+## 📄 Performance Counters Query (KQL)
+
+```
 Perf
 | where TimeGenerated > ago(30m)
 | summarize avg(CounterValue) by Computer, ObjectName, CounterName
 | order by Computer, ObjectName, CounterName
-
 ```
+📷 Screenshot:
+
+### Performance Logs Collected
+![Performance Logs](screenshots/Perf_Logs_Populated.png)
 
 ## ✅ Outcome
 -     This configuration enables end-to-end monitoring for the VM, providing both platform metrics and guest OS logs, all automated through Terraform and integrated into Azure Monitor.
@@ -260,12 +268,6 @@ Perf
 
 ### VM Associated with DCR**
 ![VM Associated](screenshots/Mtc_VM_Associated_With_DCR.png)
-
-### Syslog Logs Collected
-![Syslog Logs](screenshots/Syslog_Logs_Populated.png)
-
-### Performance Logs Collected
-![Performance Logs](screenshots/Perf_Logs_Populated.png)
 
 ### Syslog Performance Counters Configured**
 ![Syslog Perf Counters](screenshots/Syslog_Perf_Counters_Configured.png)
