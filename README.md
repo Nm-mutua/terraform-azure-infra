@@ -94,7 +94,7 @@ terraform plan                       # Preview the changes
 terraform apply -auto-approve        # Apply changes
 ```
 
-### Post-Deployment Configuration
+## Post-Deployment Configuration
 
 After successful provisioning with Terraform, the following configuration was performed on the Azure VM (mtc-vm):
 
@@ -104,7 +104,7 @@ After successful provisioning with Terraform, the following configuration was pe
 - 📜 Installed via cloud-init script defined in [`customdata.tpl`](./customdata.tpl)
 - 📂 All configurations handled through ansible/playbook.yml
 
-### CI/CD with GitHub Actions
+## CI/CD with GitHub Actions
 
 This project is designed for future integration with GitHub Actions. Planned automation steps include:
 
@@ -118,10 +118,11 @@ This project is designed for future integration with GitHub Actions. Planned aut
   - 🔐 Hardened with UFW (Allow 22, 80), Fail2Ban
   - 📂 All configurations handled through ansible/playbook.yml
 
-### 🔐 Secure Credentials with Azure Key Vault using Terraform
+## 🔐 Secure Credentials with Azure Key Vault using Terraform
+
 This section demonstrates how I used Terraform to deploy an Azure Key Vault instance and securely store a secret.
 
-## 🚀 Steps
+### 🚀 Steps
 
 1. Define Key Vault in Terraform
    - I used the azurerm_key_vault resource to deploy Key Vault and attach proper access policies for my Service Principal.
@@ -181,9 +182,9 @@ The setup was fully automated using **Terraform**.
 6. **Verification in Azure Portal**  
    - Queries run in Log Analytics confirmed Syslog and performance data ingestion.
 
-### 📊 Verification Queries
+## 📊 Verification Queries
 
-## 📄 Syslog Query (KQL):
+#### 📄 Syslog Query (KQL):
 ```
 Syslog
 | where TimeGenerated > ago(30m)
@@ -194,7 +195,7 @@ Syslog
 ### Syslog Logs Collected
 ![Syslog Logs](screenshots/Syslog_Logs_Populated.png)
 
-## 📄 Performance Counters Query (KQL)
+#### 📄 Performance Counters Query (KQL)
 
 ```
 Perf
@@ -272,7 +273,7 @@ Perf
 ### Syslog Performance Counters Configured**
 ![Syslog Perf Counters](screenshots/Syslog_Perf_Counters_Configured.png)
 
-### Planned Enhancements (Roadmap)
+## Planned Enhancements (Roadmap)
 
 - 🔧 [x] Integrate Ansible to configure Apache and harden the VM
 - 🛡️ [x]Harden VM with UFW, Fail2Ban, and best security practices
