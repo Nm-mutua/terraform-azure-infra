@@ -112,7 +112,6 @@ This section demonstrates how I used Terraform to deploy an Azure Key Vault inst
 2. Add Access Policy
    - The policy grants permission to get, list, and set secrets (see screenshot).
 
-
 3. Inject Secret via Terraform
    - I created a sample secret (e.g., a database password) using the azurerm_key_vault_secret resource.
 
@@ -128,6 +127,59 @@ This section demonstrates how I used Terraform to deploy an Azure Key Vault inst
 
 ## ✅ Outcome
     - This demo shows how sensitive data (such as API keys or passwords) can be securely managed using Infrastructure as Code and Azure-native services, aligning with DevOps and security best practices.
+
+## 📡 Azure Monitor Agent (AMA) + Data Collection Rule (DCR) Setup
+
+This section documents the configuration of **Azure Monitor Agent (AMA)** and **Data Collection Rules (DCR)** to collect guest OS metrics and Syslog data from the Azure Linux VM (`mtc-vm`).  
+The setup was fully automated using **Terraform**.
+
+### 🎯 Purpose
+- Enable **guest-level monitoring** for system metrics and logs
+- Forward **Syslog** and performance counters to **Azure Log Analytics Workspace**
+- Provide centralized observability for VM health and security events
+
+---
+
+### 🛠 Steps
+
+1. **Azure Log Analytics Workspace Provisioned**  
+   - Created in Terraform to store logs and metrics.
+   - Linked to the VM via DCR.
+
+2. **Azure Monitor Agent Installed on VM**  
+   - AMA installed automatically during Terraform apply.
+   - Visible under VM → Extensions in Azure Portal.
+
+3. **Data Collection Endpoint (DCE) Created**  
+   - Acts as the ingestion point for VM telemetry.
+   - Configured in Terraform.
+
+4. **Data Collection Rule (DCR) Configured**  
+   - Collects Syslog from facilities: `auth`, `cron`, `daemon`, `kern`, `syslog`, `user`
+   - Captures performance counters for CPU, memory, disk, and network.
+
+5. **DCR Association with VM**  
+   - Binds the VM to the DCR so logs/metrics flow into the workspace.
+
+6. **Verification in Azure Portal**  
+   - Queries run in Log Analytics confirmed Syslog and performance data ingestion.
+
+### 📊 Verification Queries
+
+**Syslog Query:**
+```kusto
+Syslog
+| where TimeGenerated > ago(30m)
+| sort by TimeGenerated desc
+
+**Performance Counters Query:**
+```Perf
+| where TimeGenerated > ago(30m)
+| summarize avg(CounterValue) by Computer, ObjectName, CounterName
+| order by Computer, ObjectName, CounterName
+
+✅ Outcome:
+This configuration enables end-to-end monitoring for the VM, providing both platform metrics and guest OS logs, all automated through Terraform and integrated into Azure Monitor.
 
 ## 📸 Screenshots
 
@@ -161,6 +213,41 @@ This section demonstrates how I used Terraform to deploy an Azure Key Vault inst
 ### Azure Key Vault Access Policy Assigned
 ![Azure Key Vault Access Policy](screenshots/Keyvault_Access_Policy.png)
 
+### Azure Log Analytics Workspace Created**
+![Azure Log Analytics Workspace Installed](screenshots/Azure_Log_Analytics_Workspace_Installed.png)
+
+### Azure Monitor Agent Installed on Linux VM**
+![Azure Monitor Linux Agent Installed](screenshots/Azure_Monitor_Linux_Agent_Installed.png)
+
+### Terraform Output — Workspace Created**
+![Terraform Output - Workspace](screenshots/Azurerm_Log_Analytics_Workspace_Apply_Output.png)
+
+### Terraform Output — Data Collection Endpoint Created**
+![Terraform Output - DCE](screenshots/Azurerm_Monitor_Data_Collection_Endpoint_Apply_Output.png)
+
+### Terraform Output — Data Collection Rule Created**
+![Terraform Output - DCR](screenshots/Azurerm_Monitor_Data_Collection_Rule_Apply_Output.png)
+
+### Terraform Output — DCR Association Created**
+![Terraform Output - Association](screenshots/Azurerm_Monitor_Data_Collection_Rule_Association_Apply_Output.png)
+
+### Data Collection Endpoint Configured**
+![DCE Configured](screenshots/Data_Collection_Endpoint_Configured.png)
+
+### Data Collection Rule Configured**
+![DCR Configured](screenshots/Data_Collection_Rule_Configured.png)
+
+### VM Associated with DCR**
+![VM Associated](screenshots/Mtc_VM_Associated_With_DCR.png)
+
+### Syslog Logs Collected**
+![Syslog Logs](screenshots/Syslog_Logs_Populated.png)
+
+### Performance Logs Collected**
+![Performance Logs](screenshots/Perf_Logs_Populated.png)
+
+### Syslog Performance Counters Configured**
+![Syslog Perf Counters](screenshots/Syslog_Perf_Counters_Configured.png)
 
 ### Planned Enhancements (Roadmap)
 
