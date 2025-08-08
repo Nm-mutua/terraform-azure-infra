@@ -16,41 +16,57 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 
 ```
 .
-├── main.tf # Main Terraform configuration (VM, Key Vault, Secret)
-├── variables.tf # Declares input variables
-├── osx.tfvars # Variable values (used with -var-file)
-├── outputs.tf # Terraform output values (e.g. public IP, client_id)
-├── .gitignore # Files/directories to ignore in Git
-├── .terraform.lock.hcl # Dependency lock file for Terraform
-├── README.md # Project documentation
+.
+├── main.tf                         # Core IaC: RG, VNet/NIC/VM, Key Vault, Secret
+├── variables.tf                    # Input variables
+├── osx.tfvars                      # Local var values (used with -var-file)
+├── outputs.tf                      # Outputs: public IP, client_id, LA workspace id/name
+├── providers.tf                    # Provider + required versions (recommended)
+├── monitor_diagnostics.tf          # VM -> Diagnostic Setting (AllMetrics to LA)
+├── monitor_ama_dcr.tf              # DCE, DCR (syslog/perf), DCR association to VM
+├── queries/                        # KQL for docs + quick copy
+│   ├── syslog.kql
+│   └── perf.kql
+├── scripts/                        # Helper scripts
+│   ├── install_ansible.sh          # Install Ansible on control node
+│   └── generate_vm_load.sh         # Optional: create OS activity to see metrics/logs
+├── ansible/
+│   ├── playbook.yml                # Apache + hardening
+│   ├── inventory.ini
+│   ├── roles/
+│   │   ├── apache/
+│   │   ├── security/
+│   │   └── docker/                 # optional
+│   └── group_vars/
+│       └── all.yml
+├── templates/
+│   └── customdata.tpl              # cloud-init script for VM provisioning
+├── screenshots/                    # Images used in README (GitHub case-sensitive!)
+│   ├── Terraform_Plan.png
+│   ├── Terraform_Apply.png
+│   ├── terraform-output.png
+│   ├── Ansible_Playbook_Run.png
+│   ├── Apache2_Service_Status.png
+│   ├── Apache2_Ubuntu_Default_Page.png
+│   ├── Fail2Ban_SSH_Jail_Status.png
+│   ├── Keyvault_Secret_Success.png
+│   ├── Keyvault_Secret_Detail.png
+│   ├── Keyvault_Access_Policy.png
+│   ├── Azure_Log_Analytics_Workspace_Installed.png
+│   ├── Azure_Monitor_Linux_Agent_Installed.png
+│   ├── Azurerm_Log_Analytics_Workspace_Apply_Output.png
+│   ├── Azurerm_Monitor_Data_Collection_Endpoint_Apply_Output.png
+│   ├── Azurerm_Monitor_Data_Collection_Rule_Apply_Output.png
+│   ├── Azurerm_Monitor_Data_Collection_Rule_Association_Apply_Output.png
+│   ├── Data_Collection_Endpoint_Configured.png
+│   ├── Data_Collection_Rule_Configured.png
+│   ├── Mtc_VM_Associated_With_DCR.png
+│   ├── Syslog_Logs_Populated.PNG
+│   └── Perf_Logs_Populated.PNG
+├── .gitignore
+├── .terraform.lock.hcl
+└── README.md
 
-├── screenshots/ # Screenshots and visual references
-│ ├── terraform-output.png # Terraform output showing Azure resources
-│ ├── Ansible_Playbook_Run.png # Ansible playbook execution output
-│ ├── Apache2_Service_Status.png # Apache2 systemctl service status
-│ ├── Apache2_Ubuntu_Default_Page.png # Default Apache2 welcome page
-│ ├── Fail2Ban_SSH_Jail_Status.png # Fail2Ban jail status confirming protection
-│ ├── Terraform_Plan.png # Terraform plan before applying
-│ ├── Terraform_Apply.png # Terraform apply showing successful resource creation
-│ ├── Keyvault_Secret_Success.png # Confirmation that secret was created
-│ ├── Keyvault_Secret_Detail.png # Secret version, name, and status
-│ └── Keyvault_Access_Policy.png # Access policy with secret permissions
-
-├── ansible/ # Ansible configuration directory
-│ ├── playbook.yml # Ansible playbook to configure Apache & harden the VM
-│ ├── inventory.ini # Inventory file listing the target VM
-│ ├── roles/ # Ansible roles (modular configuration)
-│ │ ├── apache/ # Role: Install & configure Apache
-│ │ ├── security/ # Role: Harden VM with UFW, Fail2Ban
-│ │ └── docker/ # (Optional) Role: Install & configure Docker
-│ └── group_vars/
-│ └── all.yml # Global variables for Ansible
-
-├── scripts/ # Shell scripts (optional)
-│ └── install_ansible.sh # Script to install Ansible on control node
-
-└── templates/
-└── customdata.tpl # Cloud-init script for VM provisioning
 ```
 
 ## ⚙️ Getting Started
