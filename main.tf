@@ -56,7 +56,7 @@ resource "azurerm_network_security_rule" "mtc-dev-rule" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "22"
-  source_address_prefix       = "172.173.147.218"
+  source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.mtc-rg.name
   network_security_group_name = azurerm_network_security_group.mtc-sg.name
@@ -187,3 +187,72 @@ resource "azurerm_key_vault_secret" "vm_admin_password" {
 output "client_id" {
   value = data.azurerm_client_config.current.client_id
 }
+
+resource "azurerm_log_analytics_workspace" "mtc_workspace" {
+  name                = "mtc-log-workspace"
+  location            = azurerm_resource_group.mtc-rg.location
+  resource_group_name = azurerm_resource_group.mtc-rg.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+
+  tags = {
+    environment = "dev"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "vm_diagnostics" {
+  name                       = "mtc-vm-diagnostics"
+  target_resource_id         = azurerm_linux_virtual_machine.mtc-vm.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.mtc_workspace.id
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
+  }
+}
+
+output "log_analytics_workspace_id" {
+  value = azurerm_log_analytics_workspace.mtc_workspace.id
+}
+
+output "log_analytics_workspace_name" {
+  value = azurerm_log_analytics_workspace.mtc_workspace.name
+}
+
+resource "azurerm_monitor_data_collection_endpoint" "mtc_dce" {
+  name                = "mtc-dce"
+  location            = azurerm_resource_group.mtc-rg.location
+  resource_group_name = azurerm_resource_group.mtc-rg.name
+  kind                = "Linux"
+  description         = "Data Collection Endpoint for mtc-vm"
+}
+
+resource "azurerm_monitor_data_collection_rule" "mtc_dcr" {
+  name                        = "mtc-dcr"
+  location                    = azurerm_resource_group.mtc-rg.location
+  resource_group_name         = azurerm_resource_group.mtc-rg.name
+  data_collection_endpoint_id = azurerm_monitor_data_collection_endpoint.mtc_dce.id
+
+  destinations {
+    log_analytics {
+      workspace_resource_id = azurerm_log_analytics_workspace.mtc_workspace.id
+      name                  = "logAnalyticsDestination"
+    }
+  }
+
+  data_flow {
+    streams      = ["Microsoft-Syslog"]
+    destinations = ["logAnalyticsDestination"]
+  }
+
+  data_sources {
+    syslog {
+      name = "syslogDataSource"
+
+      facility_names = ["auth", "cron", "daemon", "kern", "syslog", "user"]
+      log_levels     = ["Alert", "Critical", "Debug", "Emergency", "Error", "Info", "Notice", "Warning"]
+    }
+  }
+}
+
+
