@@ -76,12 +76,13 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 - Terraform v1.4+
 - Azure CLI
 - SSH (Cloud-init)
-- Ubuntu 20.04 LTS
+- Ubuntu 20.04 LTS target VM
 - Ansible v2.10+
 - Python 3
 - GitHub Actions
 - Azure Key Vault
 - GitHub for version control
+- Log Analytics Workspace (for AMA/DCR destination)
 
 ### ▶️ Usage
 
@@ -191,7 +192,6 @@ Syslog
 
 **Performance Counters Query:**
 ```kusto
-
 Perf
 | where TimeGenerated > ago(30m)
 | summarize avg(CounterValue) by Computer, ObjectName, CounterName
@@ -199,8 +199,8 @@ Perf
 
 ```
 
-✅ Outcome:
-This configuration enables end-to-end monitoring for the VM, providing both platform metrics and guest OS logs, all automated through Terraform and integrated into Azure Monitor.
+## ✅ Outcome
+-     This configuration enables end-to-end monitoring for the VM, providing both platform metrics and guest OS logs, all automated through Terraform and integrated into Azure Monitor.
 
 ## 📸 Screenshots
 
@@ -275,7 +275,7 @@ This configuration enables end-to-end monitoring for the VM, providing both plat
 - 🔧 [x] Integrate Ansible to configure Apache and harden the VM
 - 🛡️ [x]Harden VM with UFW, Fail2Ban, and best security practices
 - 🔐 [x]Secure credentials using Azure Key Vault
-- 📊 [ ]Enable Azure Monitor and Log Analytics
+- 📊 [x]Enable Azure Monitor and Log Analytics
 - ⚙️ [ ]Automate with GitHub Actions CI/CD
 - 📦 [ ]Use Terraform modules to organize infrastructure
 
