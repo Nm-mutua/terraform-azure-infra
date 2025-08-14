@@ -1,33 +1,16 @@
-# Terraform state and backups
-*.tfstate
-*.tfstate.backup
+# Terraform local dirs/files
 .terraform/
-.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+tfplan
 
-# Sensitive data
-terraform.tfvars
+# Sensitive inputs
+*.tfvars
+*.pfx
 *.pem
 *.key
-*.pub
-*.crt
-*.env
-*.tpl
-
-# Ansible vars (optional if you ever create secrets in Ansible)
-ansible/group_vars/
-
-# Crash/debug logs
-crash.log
+*.bak
+*.backup
 *.log
-
-# VSCode & IDE settings
-.vscode/
-.idea/
-
-# System files
-.DS_Store
-Thumbs.db
-
-screenshots/
-
-osx.tfvars
+# DO NOT ignore the lockfile; keep it tracked
