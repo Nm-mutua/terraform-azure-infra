@@ -16,53 +16,73 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 
 ```
 .
-.
-├── main.tf                         # Core IaC: RG, VNet/NIC/VM, Key Vault, Secret
-├── variables.tf                    # Input variables
-├── osx.tfvars                      # Local var values (used with -var-file)
-├── outputs.tf                      # Outputs: public IP, client_id, LA workspace id/name
-├── providers.tf                    # Provider + required versions (recommended)
-├── monitor_diagnostics.tf          # VM -> Diagnostic Setting (AllMetrics to LA)
-├── monitor_ama_dcr.tf              # DCE, DCR (syslog/perf), DCR association to VM
-├── queries/                        # KQL for docs + quick copy
+├── .github/
+│   └── workflows/
+│       └── terraform.yml                   # CI/CD: fmt/validate/plan on PR, apply on main (OIDC)
+│
+├── main.tf                                 # Core IaC: RG, VNet/NIC/VM, Key Vault, Secret
+├── variables.tf                            # Input variables
+├── providers.tf                            # Provider + required versions (recommended)
+├── outputs.tf                              # Outputs: public IP, client_id, LA workspace id/name
+├── monitor_diagnostics.tf                  # VM -> Diagnostic Setting (AllMetrics to LA)
+├── monitor_ama_dcr.tf                      # DCE, DCR (syslog/perf), DCR association to VM
+├── osx.tfvars                              # Local var values (used with -var-file)
+│
+├── queries/                                # KQL for docs + quick copy
 │   ├── syslog.kql
 │   └── perf.kql
-├── scripts/                        # Helper scripts
-│   ├── install_ansible.sh          # Install Ansible on control node
-│   └── generate_vm_load.sh         # Optional: create OS activity to see metrics/logs
+│
+├── scripts/                                # Helper scripts
+│   ├── install_ansible.sh                  # Install Ansible on control node
+│   └── generate_vm_load.sh                 # Optional: create OS activity to see metrics/logs
+│
 ├── ansible/
-│   ├── playbook.yml                # Apache + hardening
+│   ├── playbook.yml                        # Apache + hardening
 │   ├── inventory.ini
 │   ├── roles/
 │   │   ├── apache/
 │   │   ├── security/
-│   │   └── docker/                 # optional
+│   │   └── docker/                         # optional
 │   └── group_vars/
 │       └── all.yml
+│
 ├── templates/
-│   └── customdata.tpl              # cloud-init script for VM provisioning
-├── screenshots/                    # Images used in README (GitHub case-sensitive!)
-│   ├── Terraform_Plan.png
-│   ├── Terraform_Apply.png
-│   ├── terraform-output.png
-│   ├── Ansible_Playbook_Run.png
-│   ├── Apache2_Service_Status.png
-│   ├── Apache2_Ubuntu_Default_Page.png
-│   ├── Fail2Ban_SSH_Jail_Status.png
-│   ├── Keyvault_Secret_Success.png
-│   ├── Keyvault_Secret_Detail.png
-│   ├── Keyvault_Access_Policy.png
-│   ├── Azure_Log_Analytics_Workspace_Installed.png
-│   ├── Azure_Monitor_Linux_Agent_Installed.png
-│   ├── Azurerm_Log_Analytics_Workspace_Apply_Output.png
-│   ├── Azurerm_Monitor_Data_Collection_Endpoint_Apply_Output.png
-│   ├── Azurerm_Monitor_Data_Collection_Rule_Apply_Output.png
-│   ├── Azurerm_Monitor_Data_Collection_Rule_Association_Apply_Output.png
-│   ├── Data_Collection_Endpoint_Configured.png
-│   ├── Data_Collection_Rule_Configured.png
-│   ├── Mtc_VM_Associated_With_DCR.png
-│   ├── Syslog_Logs_Populated.PNG
-│   └── Perf_Logs_Populated.PNG
+│   └── customdata.tpl                      # cloud-init script for VM provisioning
+│
+├── screenshots/                            # Images used in README (case-sensitive on GitHub)
+│   ├── ci-cd/                              # NEW: pipeline + backend setup
+│   │   ├── Az_Group_Create_Success.png
+│   │   ├── Az_Storage_Account_Create_Success.png
+│   │   ├── Az_Storage_Container_Create_Success.png
+│   │   ├── Storage_Account_In_Azure_Portal.png
+│   │   ├── Azure_Login_Success.png
+│   │   ├── Secrets_And_Variables.png
+│   │   ├── Terraform_Init_Azure_Remote_Backend.png
+│   │   ├── Terraform_Validate_Success.png
+│   │   └── Terraform_Plan_Success.png
+│   └── infra/                              # original infra screenshots
+│       ├── Terraform_Plan.png
+│       ├── Terraform_Apply.png
+│       ├── terraform-output.png
+│       ├── Ansible_Playbook_Run.png
+│       ├── Apache2_Service_Status.png
+│       ├── Apache2_Ubuntu_Default_Page.png
+│       ├── Fail2Ban_SSH_Jail_Status.png
+│       ├── Keyvault_Secret_Success.png
+│       ├── Keyvault_Secret_Detail.png
+│       ├── Keyvault_Access_Policy.png
+│       ├── Azure_Log_Analytics_Workspace_Installed.png
+│       ├── Azure_Monitor_Linux_Agent_Installed.png
+│       ├── Azurerm_Log_Analytics_Workspace_Apply_Output.png
+│       ├── Azurerm_Monitor_Data_Collection_Endpoint_Apply_Output.png
+│       ├── Azurerm_Monitor_Data_Collection_Rule_Apply_Output.png
+│       ├── Azurerm_Monitor_Data_Collection_Rule_Association_Apply_Output.png
+│       ├── Data_Collection_Endpoint_Configured.png
+│       ├── Data_Collection_Rule_Configured.png
+│       ├── Mtc_VM_Associated_With_DCR.png
+│       ├── Syslog_Logs_Populated.PNG
+│       └── Perf_Logs_Populated.PNG
+│
 ├── .gitignore
 ├── .terraform.lock.hcl
 └── README.md
