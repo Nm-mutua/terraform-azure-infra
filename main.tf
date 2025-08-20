@@ -124,13 +124,11 @@ resource "azurerm_linux_virtual_machine" "mtc-vm" {
   }
 
   provisioner "local-exec" {
-    command = templatefile("${path.module}/windows-ssh-script.tpl", {
-      hostname     = self.public_ip_address,
-      user         = "adminuser",
-      identityfile = "~/.ssh/mtcazurekey"
-    })
-    interpreter = ["Powershell", "-Command"]
+    when       = create
+    on_failure = continue
+    command    = "echo local-exec disabled"
   }
+
   tags = {
     environment = "dev"
   }
