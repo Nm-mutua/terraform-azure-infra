@@ -13,6 +13,9 @@
 ![Ansible](https://img.shields.io/badge/Config-Ansible-informational)
 ![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-informational)
 
+**Note:** Cloud resources have been torn down to avoid costs. The repo includes screenshots, saved outputs, and a CI workflow in “docs mode” for review.
+
+
 This project provisions and configures Azure infrastructure with **Terraform** and **GitHub Actions CI/CD**, including:
 
 - **Resource Group**  
