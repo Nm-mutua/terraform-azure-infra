@@ -6,15 +6,23 @@
   </a>
 </p>
 
-This project provisions a complete Azure infrastructure using Terraform, including:
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- Azure Resource Group  
-- Virtual Network & Subnet  
-- Network Security Group (NSG) and rules  
-- Public IP and Network Interface  
-- Ubuntu Linux Virtual Machine  
-- Cloud-init for VM configuration via `customdata.tpl`  
-- Automated server configuration and hardening with Ansible (see [Apache Setup & Hardening](#apache-setup--hardening))  
+This project provisions and configures Azure infrastructure with **Terraform** and **GitHub Actions CI/CD**, including:
+
+- **Resource Group**  
+- **Virtual Network & Subnet**  
+- **Network Security Group (NSG)** with ingress/egress rules  
+- **Public IP** and **Network Interface (NIC)**  
+- **Ubuntu Linux VM** (cloud-init via `templates/customdata.tpl`) with SSH key injection (`var.admin_ssh_pubkey`)  
+- **Azure Key Vault** with a sample **Secret** and access policy for the GitHub OIDC service principal (`var.sp_object_id`)  
+- **Azure Monitor / Log Analytics**:  
+  - **Diagnostic Settings** streaming **AllMetrics** to Log Analytics (`monitor_diagnostics.tf`)  
+  - **Data Collection Endpoint (DCE)**, **Data Collection Rule (DCR)** for **AMA** (syslog/perf), and **DCR association** to the VM (`monitor_ama_dcr.tf`)  
+- **Remote Terraform state** in **Azure Storage** (backend configured at init)  
+- **GitHub Actions** pipeline (`.github/workflows/terraform.yml`) that authenticates to Azure via **OIDC**, runs **fmt/validate/plan** on PRs, and **applies** on push to `main`  
+- Optional **Ansible** hardening & Apache install (see [Apache Setup & Hardening](#apache-setup--hardening))  
+- Handy **KQL queries** for validation and docs (`queries/syslog.kql`, `queries/perf.kql`)
 
 ---
 
@@ -602,13 +610,13 @@ jobs:
 ### Syslog Performance Counters Configured**
 ![Syslog Perf Counters](screenshots/Syslog_Perf_Counters_Configured.png)
 
-## Planned Enhancements (Roadmap)
+## ✅ Implemented Enhancements
 
-- 🔧 [x] Integrate Ansible to configure Apache and harden the VM
-- 🛡️ [x]Harden VM with UFW, Fail2Ban, and best security practices
-- 🔐 [x]Secure credentials using Azure Key Vault
-- 📊 [x]Enable Azure Monitor and Log Analytics
-- ⚙️ [x]Automate with GitHub Actions CI/CD
+- ✅ Integrate **Ansible** to configure Apache and harden the VM  
+- ✅ Harden VM with **UFW**, **Fail2Ban**, and baseline security best practices  
+- ✅ Secure credentials with **Azure Key Vault** (secret + OIDC access policy)  
+- ✅ Enable **Azure Monitor & Log Analytics** (DCE/DCR + diagnostic settings)  
+- ✅ **GitHub Actions CI/CD** with OIDC + remote Terraform backend
 
  👤 Author
 GitHub Profile: [**Nm-mutua**](https:github.com/Nm-mutua).
