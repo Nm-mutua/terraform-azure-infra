@@ -104,11 +104,11 @@ resource "azurerm_linux_virtual_machine" "mtc-vm" {
   disable_password_authentication = true
   network_interface_ids           = [azurerm_network_interface.mtc-nic.id]
 
-  custom_data = filebase64("customdata.tpl")
+  custom_data = filebase64("${path.module}/customdata.tpl")
 
   admin_ssh_key {
     username   = "adminuser"
-    public_key = file("~/.ssh/mtcazurekey.pub")
+    public_key = var.admin_ssh_pubkey
   }
 
   os_disk {
@@ -124,7 +124,7 @@ resource "azurerm_linux_virtual_machine" "mtc-vm" {
   }
 
   provisioner "local-exec" {
-    command = templatefile("windows-ssh-script.tpl", {
+    command = templatefile("${path.module}/windows-ssh-script.tpl", {
       hostname     = self.public_ip_address,
       user         = "adminuser",
       identityfile = "~/.ssh/mtcazurekey"
@@ -161,23 +161,38 @@ resource "azurerm_key_vault" "mtc_kv" {
   purge_protection_enabled    = false
   sku_name                    = "standard"
 
-  access_policy {
-    tenant_id = data.azurerm_client_config.current.tenant_id
-    object_id = data.azurerm_client_config.current.object_id
-
-    secret_permissions = [
-      "Get",
-      "List",
-      "Set",
-      "Delete"
-    ]
-  }
-
   tags = {
     environment = "dev"
   }
 }
 
+resource "azurerm_key_vault_access_policy" "tf_sp" {
+  key_vault_id       = azurerm_key_vault.mtc_kv.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = var.sp_object_id
+  secret_permissions = ["Get", "List", "Set", "Delete"]
+}
+
+# -------------------------------
+# Local user policy (optional)
+# -------------------------------
+variable "user_object_id" {
+  description = "Object ID of the human user running Terraform locally"
+  type        = string
+  default     = null
+}
+
+resource "azurerm_key_vault_access_policy" "local_user" {
+  count              = var.user_object_id == null ? 0 : 1
+  key_vault_id       = azurerm_key_vault.mtc_kv.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = var.user_object_id
+  secret_permissions = ["Get", "List"]
+}
+
+# -------------------------------
+# Store VM admin password in Key Vault
+# -------------------------------
 resource "azurerm_key_vault_secret" "vm_admin_password" {
   name         = "vm-admin-password"
   value        = "P@ssword123!"
@@ -255,4 +270,7 @@ resource "azurerm_monitor_data_collection_rule" "mtc_dcr" {
   }
 }
 
+terraform {
+  backend "azurerm" {}
+}
 

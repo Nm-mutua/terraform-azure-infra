@@ -17,3 +17,5 @@ tfplan
 *.tfvars
 *.tfstate*
 .terraform/
+sp-creds.json
+*fedcred.json
