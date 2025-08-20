@@ -8,6 +8,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+![Terraform](https://img.shields.io/badge/IaC-Terraform-informational)
+![Azure](https://img.shields.io/badge/Cloud-Azure-informational)
+![Ansible](https://img.shields.io/badge/Config-Ansible-informational)
+![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-informational)
+
 This project provisions and configures Azure infrastructure with **Terraform** and **GitHub Actions CI/CD**, including:
 
 - **Resource Group**  
@@ -23,8 +28,6 @@ This project provisions and configures Azure infrastructure with **Terraform** a
 - **GitHub Actions** pipeline (`.github/workflows/terraform.yml`) that authenticates to Azure via **OIDC**, runs **fmt/validate/plan** on PRs, and **applies** on push to `main`  
 - Optional **Ansible** hardening & Apache install (see [Apache Setup & Hardening](#apache-setup--hardening))  
 - Handy **KQL queries** for validation and docs (`queries/syslog.kql`, `queries/perf.kql`)
-
----
 
 ## 📁 Project Structure
 
@@ -130,7 +133,6 @@ az version
 python3 --version
 ansible --version
 
-
 ### ▶️ Usage
 
 ```bash
@@ -148,8 +150,8 @@ After successful provisioning with Terraform, the following configuration was pe
 - ✅ Installed Docker Engine on Ubuntu 20.04 LTS
 - 🛠️ Verified installation using: docker --version
 - 📦 Purpose: Prepares the VM for container-based workloads (optional future expansion)
-- 📜 Installed via cloud-init script defined in [`customdata.tpl`](./customdata.tpl)
-- 📂 All configurations handled through ansible/playbook.yml
+- 📜 Installed via cloud-init script defined in [`customdata.tpl`](./templates/customdata.tpl)
+- 📂 All configurations handled through [ansible/playbook.yml](./ansible/playbook.yml)
 
 ## CI/CD with GitHub Actions (Terraform)
 
@@ -157,25 +159,7 @@ After successful provisioning with Terraform, the following configuration was pe
 
 Workflow file: [`.github/workflows/terraform.yml`](.github/workflows/terraform.yml)
 
-**What the pipeline does**
-- Triggers on `push` and `pull_request` to `main`.
-- Authenticates to Azure via **OIDC** (no stored cloud creds).
-- Uses Azure Storage as the **remote backend** for Terraform state.
-- Runs `terraform fmt`, `validate`, and `plan`; uploads the plan as an artifact.
-- (PRs) Posts the plan summary as a comment.
-- (Pushes to `main`) Applies the saved plan automatically.
-
-This project integrates with GitHub Actions to run Terraform automatically. Used automation steps include:
-
-- **Terraform**: `terraform fmt` `validate` , and `test`
-- **Ansible linting**: Ensure playbook syntax and best practices
-- **SSH deployment**: Deploy playbook to Azure VM using CI pipeline
-- **Security Scans** Use `tfsec` and `ansible-lint` for code scanning
-- **Apache Setup & Hardening**:
-  - ✅ Installed Apache Web Server using Ansible playbook
-  - 📄 Apache is configured to serve a default index.html page
-  - 🔐 Hardened with UFW (Allow 22, 80), Fail2Ban
-  - 📂 All configurations handled through ansible/playbook.yml
+➡️ **Full details:** see [CI/CD guide below](#terraform-on-azure--cicd-with-github-actions-oidc--remote-backend).
 
 ## 🔐 Secure Credentials with Azure Key Vault using Terraform
 
@@ -219,27 +203,27 @@ The setup was fully automated using **Terraform**.
 
 ### 🛠 Steps
 
-1. **Azure Log Analytics Workspace Provisioned**  
-   - Created in Terraform to store logs and metrics.
-   - Linked to the VM via DCR.
+1. ### Azure Log Analytics Workspace Provisioned 
+     - Created in Terraform to store logs and metrics.
+     - Linked to the VM via DCR.
 
-2. **Azure Monitor Agent Installed on VM**  
-   - AMA installed automatically during Terraform apply.
-   - Visible under VM → Extensions in Azure Portal.
+2. ### Azure Monitor Agent Installed on VM
+     - AMA installed automatically during Terraform apply.
+     - Visible under VM → Extensions in Azure Portal.
 
-3. **Data Collection Endpoint (DCE) Created**  
-   - Acts as the ingestion point for VM telemetry.
-   - Configured in Terraform.
+3. ### Data Collection Endpoint (DCE) Created
+     - Acts as the ingestion point for VM telemetry.
+     - Configured in Terraform.
 
-4. **Data Collection Rule (DCR) Configured**  
-   - Collects Syslog from facilities: `auth`, `cron`, `daemon`, `kern`, `syslog`, `user`
-   - Captures performance counters for CPU, memory, disk, and network.
+4. ### Data Collection Rule (DCR) Configured  
+     - Collects Syslog from facilities: `auth`, `cron`, `daemon`, `kern`, `syslog`, `user`
+     - Captures performance counters for CPU, memory, disk, and network.
 
-5. **DCR Association with VM**  
-   - Binds the VM to the DCR so logs/metrics flow into the workspace.
+5. ### DCR Association with VM  
+     - Binds the VM to the DCR so logs/metrics flow into the workspace.
 
-6. **Verification in Azure Portal**  
-   - Queries run in Log Analytics confirmed Syslog and performance data ingestion.
+6. ### Verification in Azure Portal
+     - Queries run in Log Analytics confirmed Syslog and performance data ingestion.
 
 ## 📊 Verification Queries
 
@@ -272,7 +256,7 @@ Perf
 
 ## Terraform on Azure — CI/CD with GitHub Actions (OIDC + Remote Backend)
 
-This guide documents the exact steps i followed to:
+This guide documents the exact steps I followed to:
 - **Automate Terraform** with GitHub Actions (plan on PR, apply on `main`).
 - **Move Terraform state** to **Azure Storage** (remote backend).
 - **Use OpenID Connect (OIDC)** for passwordless GitHub → Azure login.
@@ -297,6 +281,8 @@ terraform plan -out tfplan
 
 # 4) Apply (local)
 terraform apply -auto-approve tfplan
+
+```
 
 ## 2) Create Azure Storage for Remote State
 
@@ -515,7 +501,7 @@ jobs:
 
 ---
 
-## 7) What i fixed along the way (troubleshooting)
+## 7) What I fixed along the way (troubleshooting)
 
 - **OIDC errors** (`ACTIONS_ID_TOKEN_REQUEST_URL missing`, `AADSTS700025 No matching federated identity`):  
   - Add `permissions: id-token: write` in the workflow.  
@@ -619,7 +605,7 @@ jobs:
 - ✅ **GitHub Actions CI/CD** with OIDC + remote Terraform backend
 
  👤 Author
-GitHub Profile: [**Nm-mutua**](https:github.com/Nm-mutua).
+GitHub Profile: [**Nm-mutua**](https://github.com/Nm-mutua)
 
 ## Credits
 This project is inspired by the [FreeCodeCamp Terraform on Azure tutorial](https://www.youtube.com/watch?v=V53AHWun17s&list=WL&index=4)
