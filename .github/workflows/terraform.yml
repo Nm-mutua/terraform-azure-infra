@@ -2,47 +2,70 @@
 name: Terraform CI/CD
 
 on:
+  pull_request:
+    branches: [ main ]
   push:
     branches: [ main ]
-  pull_request:
+
+# OIDC TOKEN PERMS (must be top-level)
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
+
+    # (optional but helpful to be explicit at job level too)
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
 
     env:
       ARM_USE_OIDC: "true"
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      TF_VAR_sp_object_id: ${{ secrets.SP_OBJECT_ID }}   # <-- your tf var from a repo secret
+      TF_VAR_sp_object_id: ${{ secrets.SP_OBJECT_ID }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Azure Login
+      - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # Sanity check: this prints a URL only if OIDC token is available
+      - name: Check OIDC token availability
+        run: |
+          test -n "$ACTIONS_ID_TOKEN_REQUEST_URL" && echo "OIDC token URL OK" || (echo "OIDC token MISSING" && exit 1)
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.5
 
-      - name: Terraform Init
-        run: terraform init -reconfigure
-        # If you use a remote backend, pass the configs here with -backend-config=... (as we set earlier)
+      - name: Terraform Init (remote backend)
+        run: |
+          terraform init -reconfigure \
+            -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RG }}" \
+            -backend-config="storage_account_name=${{ secrets.TF_BACKEND_SA }}" \
+            -backend-config="container_name=${{ secrets.TF_BACKEND_CONTAINER }}" \
+            -backend-config="key=${{ secrets.TF_BACKEND_KEY }}"
 
-      - name: Terraform Plan
-        run: terraform plan
+      - run: terraform fmt -check -recursive
+      - run: terraform validate
+      - run: terraform plan -input=false -out=tfplan
 
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve
+      - name: Terraform Apply (only on main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -input=false -auto-approve tfplan
+
 
 
     
