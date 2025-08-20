@@ -211,6 +211,278 @@ Perf
 ## ✅ Outcome
 -     This configuration enables end-to-end monitoring for the VM, providing both platform metrics and guest OS logs, all automated through Terraform and integrated into Azure Monitor.
 
+## Terraform on Azure — CI/CD with GitHub Actions (OIDC + Remote Backend)
+
+This guide documents the exact steps i followed to:
+- **Automate Terraform** with GitHub Actions (plan on PR, apply on `main`).
+- **Move Terraform state** to **Azure Storage** (remote backend).
+- **Use OpenID Connect (OIDC)** for passwordless GitHub → Azure login.
+- **Configure repo secrets/variables** for a clean, reusable pipeline.
+
+## 1) Prerequisites
+
+```
+
+- Azure subscription and `Owner` or the ability to create a service principal (the pipeline uses OIDC; no client secret needed).
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) logged in:  
+  ```bash
+  az login
+  az account set -s "cc0dee78-6258-4f70-8273-e10b2a652293"
+  ```
+- Terraform 1.5+
+
+---
+
+## 2) Create Azure Storage for Remote State
+
+We store Terraform state in an Azure Storage Account with soft-delete/versioning enabled.
+
+### 2.1 Variables
+
+```bash
+RG="tfstate-rg-nm"
+LOC="eastus"
+SA="tfstatenm77536"       # globally unique
+CONTAINER="tfstate"
+KEY="terraform.tfstate"
+```
+
+### 2.2 Create resource group and storage
+
+```bash
+# resource group
+az group create --name "$RG" --location "$LOC"
+
+# storage account
+az storage account create   --name "$SA"   --resource-group "$RG"   --location "$LOC"   --sku Standard_LRS   --encryption-services blob
+
+# enable soft-delete + versioning
+az storage account blob-service-properties update   --account-name "$SA"   --resource-group "$RG"   --enable-delete-retention true   --delete-retention-days 7   --enable-versioning true
+
+# create the container for state
+az storage container create   --name "$CONTAINER"   --account-name "$SA"
+```
+
+**Screenshots**  
+![RG created](screenshots/Az_Group_Create_Success.png)  
+![Storage created](screenshots/Az_Storage_Account_Create_Success.png)  
+![Container created](screenshots/Az_Storage_Container_Create_Success.png)  
+![Portal view](screenshots/Storage_Account_In_Azure_Portal.png)
+
+---
+
+## 3) Configure OIDC (GitHub → Azure)
+
+1. **Create an App Registration** (or an Azure AD enterprise app) that represents your GitHub Actions runner (we named ours `gha-terraform-sp`).  
+2. **Add a Federated Credential** with:
+   - Issuer: `https://token.actions.githubusercontent.com`
+   - Subject (example for PRs): `repo:<OWNER>/<REPO>:pull_request`
+     - You can add another for branch builds: `repo:<OWNER>/<REPO>:ref:refs/heads/main`
+   - Audience: `api://AzureADTokenExchange`
+3. Assign roles to the app (least privilege):
+   - Subscription scope: **Contributor**
+   - Storage account (state) scope: **Storage Blob Data Contributor**
+
+**Screenshot**  
+![OIDC login success in Actions log](screenshots/Azure_Login_Success.png)
+
+---
+
+## 4) Repository Secrets / Variables
+
+Added these **Repository secrets** (Settings → *Secrets and variables* → *Actions*):
+
+| Secret | Purpose |
+|---|---|
+| `AZURE_CLIENT_ID` | App registration (OIDC) client ID |
+| `AZURE_TENANT_ID` | Azure tenant ID |
+| `AZURE_SUBSCRIPTION_ID` | Subscription ID |
+| `TF_BACKEND_RG` | Resource group of the state SA |
+| `TF_BACKEND_SA` | Storage account name for state |
+| `TF_BACKEND_CONTAINER` | Container name (e.g., `tfstate`) |
+| `TF_BACKEND_KEY` | State blob key (e.g., `terraform.tfstate`) |
+| `ADMIN_SSH_PUBKEY` | SSH public key used by the VM `adminuser` |
+| `SP_OBJECT_ID` | (Optional) Object ID of the OIDC app for Key Vault policy |
+
+**Screenshot**  
+![Secrets & variables](screenshots/Secrets_And_Variables.png)
+
+---
+
+## 5) Terraform configuration
+
+### 5.1 Backend (remote state)
+
+In your `main.tf` keep an empty backend block (we pass real values at init time via the workflow):
+
+```hcl
+terraform {
+  backend "azurerm" {}
+}
+```
+
+### 5.2 Useful variables
+
+```hcl
+# variables.tf
+variable "admin_ssh_pubkey" {
+  description = "SSH public key for the VM admin user"
+  type        = string
+}
+
+variable "sp_object_id" {
+  description = "Object ID of the GitHub OIDC Service Principal"
+  type        = string
+  default     = null
+}
+
+# Optional switch to avoid runner-specific local-exec in CI
+variable "enable_local_exec" {
+  type    = bool
+  default = false
+}
+```
+
+Use the variable in your VM resource instead of reading a local file on the runner:
+
+```hcl
+resource "azurerm_linux_virtual_machine" "mtc-vm" {
+  # ...
+  admin_username = "adminuser"
+  admin_ssh_key {
+    username   = "adminuser"
+    public_key = var.admin_ssh_pubkey
+  }
+}
+```
+
+### 5.3 Disable runner-specific local-exec in CI (safe default)
+
+```hcl
+provisioner "local-exec" {
+  when       = create
+  on_failure = continue
+  command    = "echo local-exec disabled"
+}
+```
+
+---
+
+## 6) GitHub Actions workflow (`.github/workflows/terraform.yml`)
+
+This is the CI/CD pipeline we used. It plans on PRs and applies on push to `main`.  
+It logs in to Azure via **OIDC**, configures the **remote backend**, and runs `fmt`, `validate`, `plan` (+ uploads `plan.txt`).
+
+```yaml
+name: Terraform CI/CD
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  id-token: write        # OIDC
+  contents: read
+  pull-requests: write   # to post plan comments
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_admin_ssh_pubkey: ${{ secrets.ADMIN_SSH_PUBKEY }}
+      TF_VAR_sp_object_id: ${{ secrets.SP_OBJECT_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Init (remote backend)
+        run: |
+          terraform init -reconfigure             -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RG }}"             -backend-config="storage_account_name=${{ secrets.TF_BACKEND_SA }}"             -backend-config="container_name=${{ secrets.TF_BACKEND_CONTAINER }}"             -backend-config="key=${{ secrets.TF_BACKEND_KEY }}"
+
+      - name: Format
+        run: terraform fmt -check -recursive
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan
+        run: |
+          terraform plan -input=false -out=tfplan -no-color
+          terraform show -no-color tfplan > plan.txt
+
+      - name: Upload plan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: |
+            tfplan
+            plan.txt
+
+      - name: Apply (only on main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -input=false -auto-approve tfplan
+```
+
+**Screenshots**  
+![Init](screenshots/Terraform_Init_Azure_Remote_Backend.png)  
+![Validate](screenshots/Terraform_Validate_Success.png)  
+![Plan](screenshots/Terraform_Plan_Success.png)
+
+---
+
+## 7) What i fixed along the way (troubleshooting)
+
+- **OIDC errors** (`ACTIONS_ID_TOKEN_REQUEST_URL missing`, `AADSTS700025 No matching federated identity`):  
+  - Add `permissions: id-token: write` in the workflow.  
+  - Ensure the Federated Credential subject matches the event (e.g., `pull_request` or `ref:refs/heads/main`).
+
+- **Secret scanning blocked push**: Removed plaintext creds (JSON) from the repo. Use OIDC + secrets only.
+
+- **Runner file path issues** (`file("~/.ssh/...")`): Stop reading files from the runner. Use variables (`var.admin_ssh_pubkey`) wired from secrets.
+
+- **Provisioner failures** (PowerShell not in PATH on Ubuntu): Disabled `local-exec` in CI or gated it with `enable_local_exec` for local use only.
+
+---
+
+## 8) Verify
+
+- Action run shows **Azure login succeeded** and **Terraform init/validate/plan** succeed.  
+- Remote state blob exists in the storage container.  
+- On push to `main`, the pipeline **applies** and reports outputs.
+
+---
+
+---
+
+## 9) Optional extras
+
+- Post plan as a PR comment (via `actions/github-script`).  
+- Add `tflint`/`checkov` before plan.  
+- Require manual approval before Apply (GitHub Environments).  
+- Add a `workflow_dispatch` trigger for manual runs.
+
+---
+
 ## 📸 Screenshots
 
 ### Terraform output after applying the configuration on Azure:
