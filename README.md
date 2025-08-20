@@ -1,4 +1,10 @@
-# 🚀 Terraform Azure Virtual Machine Infrastructure
+# 🚀 Terraform Azure Infrastructure
+
+<p align="center">
+  <a href="https://github.com/Nm-mutua/terraform-azure-infra/actions/workflows/terraform.yml">
+    <img src="https://github.com/Nm-mutua/terraform-azure-infra/actions/workflows/terraform.yml/badge.svg?branch=main" alt="Terraform CI/CD">
+  </a>
+</p>
 
 This project provisions a complete Azure infrastructure using Terraform, including:
 
@@ -93,16 +99,29 @@ This project provisions a complete Azure infrastructure using Terraform, includi
 
 ### ✅ Prerequisites
 
-- Terraform v1.4+
-- Azure CLI
-- SSH (Cloud-init)
-- Ubuntu 20.04 LTS target VM
-- Ansible v2.10+
-- Python 3
-- GitHub Actions
-- Azure Key Vault
-- GitHub for version control
-- Log Analytics Workspace (for AMA/DCR destination)
+- **Azure subscription** with permissions to create RG, VNets, VMs, Key Vault, and Log Analytics  
+  *(Owner, or Contributor + User Access Admin)*
+- **Terraform v1.4+**
+- **Azure CLI**
+- **SSH** tools (for cloud-init public key handling)
+- **Ubuntu 20.04 LTS** image (target VM)
+- **Ansible v2.10+**
+- **Python 3**
+- **GitHub Actions** (repo has workflow enabled)
+- **Azure Key Vault**
+- **GitHub** for version control
+- **Log Analytics Workspace** (AMA/DCR destination; can be created by Terraform or pre-existing)
+
+> ℹ️ In CI (GitHub Actions) you’ll use OIDC with `azure/login`; locally you’ll use `az login`.
+
+#### Quick verify
+
+```bash
+terraform -version
+az version
+python3 --version
+ansible --version
+
 
 ### ▶️ Usage
 
@@ -124,9 +143,21 @@ After successful provisioning with Terraform, the following configuration was pe
 - 📜 Installed via cloud-init script defined in [`customdata.tpl`](./customdata.tpl)
 - 📂 All configurations handled through ansible/playbook.yml
 
-## CI/CD with GitHub Actions
+## CI/CD with GitHub Actions (Terraform)
 
-This project is designed for future integration with GitHub Actions. Planned automation steps include:
+[![Terraform CI/CD](https://github.com/Nm-mutua/terraform-azure-infra/actions/workflows/terraform.yml/badge.svg?branch=main)](https://github.com/Nm-mutua/terraform-azure-infra/actions/workflows/terraform.yml)
+
+Workflow file: [`.github/workflows/terraform.yml`](.github/workflows/terraform.yml)
+
+**What the pipeline does**
+- Triggers on `push` and `pull_request` to `main`.
+- Authenticates to Azure via **OIDC** (no stored cloud creds).
+- Uses Azure Storage as the **remote backend** for Terraform state.
+- Runs `terraform fmt`, `validate`, and `plan`; uploads the plan as an artifact.
+- (PRs) Posts the plan summary as a comment.
+- (Pushes to `main`) Applies the saved plan automatically.
+
+This project integrates with GitHub Actions to run Terraform automatically. Used automation steps include:
 
 - **Terraform**: `terraform fmt` `validate` , and `test`
 - **Ansible linting**: Ensure playbook syntax and best practices
@@ -239,19 +270,25 @@ This guide documents the exact steps i followed to:
 - **Use OpenID Connect (OIDC)** for passwordless GitHub → Azure login.
 - **Configure repo secrets/variables** for a clean, reusable pipeline.
 
-## 1) Prerequisites
+## 🚀 Quickstart
 
-```
+```bash
+# 0) Azure login (local, for first run)
+az login
+az account set -s "cc0dee78-6258-4f70-8273-e10b2a652293"
 
-- Azure subscription and `Owner` or the ability to create a service principal (the pipeline uses OIDC; no client secret needed).
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) logged in:  
-  ```bash
-  az login
-  az account set -s "cc0dee78-6258-4f70-8273-e10b2a652293"
-  ```
-- Terraform 1.5+
+# 1) Initialize remote backend (already created)
+terraform init -reconfigure
 
----
+# 2) Format & validate
+terraform fmt -recursive
+terraform validate
+
+# 3) Plan (local)
+terraform plan -out tfplan
+
+# 4) Apply (local)
+terraform apply -auto-approve tfplan
 
 ## 2) Create Azure Storage for Remote State
 
