@@ -132,6 +132,7 @@ terraform -version
 az version
 python3 --version
 ansible --version
+```
 
 ### ▶️ Usage
 
@@ -152,6 +153,20 @@ After successful provisioning with Terraform, the following configuration was pe
 - 📦 Purpose: Prepares the VM for container-based workloads (optional future expansion)
 - 📜 Installed via cloud-init script defined in [`customdata.tpl`](./templates/customdata.tpl)
 - 📂 All configurations handled through [ansible/playbook.yml](./ansible/playbook.yml)
+
+## Apache Setup & Hardening
+
+- **Web server**: Apache 2 installed via Ansible  
+  - Playbook: [`ansible/playbook.yml`](./ansible/playbook.yml)  
+  - Roles: `roles/apache`, `roles/security`
+- **UFW**: allow `22/tcp` (SSH) and `80/tcp` (HTTP); default deny inbound
+- **Fail2Ban**: enable `sshd` jail to throttle brute-force SSH attempts
+- **Default page**: served from `/var/www/html/index.html` (see screenshots)
+
+**Run the playbook locally (optional):**
+```bash
+ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
+```
 
 ## CI/CD with GitHub Actions (Terraform)
 
@@ -267,7 +282,7 @@ This guide documents the exact steps I followed to:
 ```bash
 # 0) Azure login (local, for first run)
 az login
-az account set -s "cc0dee78-6258-4f70-8273-e10b2a652293"
+az account set -s "<your-subscription-id>"
 
 # 1) Initialize remote backend (already created)
 terraform init -reconfigure
