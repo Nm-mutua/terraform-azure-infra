@@ -14,3 +14,6 @@ tfplan
 *.backup
 *.log
 # DO NOT ignore the lockfile; keep it tracked
+*.tfvars
+*.tfstate*
+.terraform/
