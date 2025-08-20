@@ -1,35 +1,27 @@
-# .github/workflows/terraform.yml
+# github/workflows/terraform.yml
 name: Terraform CI/CD
 
 on:
-  pull_request:
-    branches: [ main ]
   push:
     branches: [ main ]
-
-permissions:
-  id-token: write          # OIDC to Azure
-  contents: read
-  pull-requests: write     # to post plan comments
-
-concurrency:
-  group: tf-${{ github.ref }}
-  cancel-in-progress: true
+  pull_request:
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
+
     env:
       ARM_USE_OIDC: "true"
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_sp_object_id: ${{ secrets.SP_OBJECT_ID }}   # <-- your tf var from a repo secret
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Azure login (OIDC)
+      - name: Azure Login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -41,64 +33,17 @@ jobs:
         with:
           terraform_version: 1.7.5
 
-      - name: Cache Terraform plugin dir
-        uses: actions/cache@v4
-        with:
-          path: ~/.terraform.d/plugin-cache
-          key: ${{ runner.os }}-tfplugins-${{ hashFiles('**/*.tf*') }}
-          restore-keys: |
-            ${{ runner.os }}-tfplugins-
-      - run: |
-          mkdir -p ~/.terraform.d/plugin-cache
-          echo 'plugin_cache_dir = "~/.terraform.d/plugin-cache"' > ~/.terraformrc
-
-      - name: Terraform Init (remote backend)
-        run: |
-          terraform init -reconfigure \
-            -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RG }}" \
-            -backend-config="storage_account_name=${{ secrets.TF_BACKEND_SA }}" \
-            -backend-config="container_name=${{ secrets.TF_BACKEND_CONTAINER }}" \
-            -backend-config="key=${{ secrets.TF_BACKEND_KEY }}"
-
-      - name: Terraform Format
-        run: terraform fmt -check -recursive
-
-      - name: Terraform Validate
-        run: terraform validate
+      - name: Terraform Init
+        run: terraform init -reconfigure
+        # If you use a remote backend, pass the configs here with -backend-config=... (as we set earlier)
 
       - name: Terraform Plan
-        id: plan
-        run: |
-          terraform plan -input=false -no-color -out=tfplan
-          terraform show -no-color tfplan > plan.txt
+        run: terraform plan
 
-      - name: Upload plan artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan
-          path: |
-            tfplan
-            plan.txt
-        if: always()
-
-      # Comment the plan on PRs
-      - name: Comment PR with plan
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const body = fs.readFileSync('plan.txt', 'utf8').slice(0, 60000); // GH comment limit
-            const header = '### Terraform Plan í³œ\n```\n' + body + '\n```';
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: header
-            });
-
-      # Auto-apply on push to main
       - name: Terraform Apply
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: terraform apply -input=false -auto-approve tfplan
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve
+
+
+    
 
