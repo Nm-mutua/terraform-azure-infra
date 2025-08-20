@@ -279,8 +279,7 @@ Perf
 - 🛡️ [x]Harden VM with UFW, Fail2Ban, and best security practices
 - 🔐 [x]Secure credentials using Azure Key Vault
 - 📊 [x]Enable Azure Monitor and Log Analytics
-- ⚙️ [ ]Automate with GitHub Actions CI/CD
-- 📦 [ ]Use Terraform modules to organize infrastructure
+- ⚙️ [x]Automate with GitHub Actions CI/CD
 
  👤 Author
 GitHub Profile: [**Nm-mutua**](https:github.com/Nm-mutua).
